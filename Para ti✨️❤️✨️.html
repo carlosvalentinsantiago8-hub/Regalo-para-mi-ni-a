@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Yesica ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #050510; color: white; font-family: 'Montserrat', sans-serif; overflow: hidden; }
+        #estrellas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .container { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        
+        /* Animaciones de entrada y salida */
+        .step { display: none; opacity: 0; transition: opacity 1s ease; width: 100%; position: absolute; }
+        .active { display: block !important; opacity: 1; }
+        
+        /* Textos */
+        .intro-text { font-family: 'Dancing Script', cursive; font-size: 3rem; text-shadow: 0 0 20px #ff4d6d; color: #fff0f3; margin-bottom: 20px;}
+        
+        /* Botones */
+        .btn-container { display: flex; justify-content: center; gap: 20px; margin-top: 50px; }
+        button { padding: 15px 40px; font-size: 1.5rem; border: none; border-radius: 50px; font-family: 'Dancing Script', cursive; cursor: pointer; transition: transform 0.2s; }
+        #si { background: #ff4d6d; color: white; box-shadow: 0 0 25px rgba(255, 77, 109, 0.6); animation: palpito 1.5s infinite; }
+        #no { background: #444; color: white; position: absolute; }
+        @keyframes palpito { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* REPRODUCTOR */
+        #player-container {
+            display: none; /* Se muestra con JS */
+            opacity: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            margin-top: -50px;
+            transition: opacity 1s ease; /* Transición suave para aparecer/desaparecer */
+        }
+
+        /* ESTILO DEL CORAZÓN GIRATORIO */
+        .cover-art {
+            position: relative; width: 120px; height: 120px; background: #ff4d6d;
+            box-shadow: 0 0 50px rgba(255, 77, 109, 0.8);
+            animation: girarCorazon 10s linear infinite; animation-play-state: paused;
+            transform: rotate(-45deg); margin-bottom: 80px;
+        }
+        .cover-art::before, .cover-art::after {
+            content: ""; position: absolute; width: 120px; height: 120px; background: #ff4d6d; border-radius: 50%;
+        }
+        .cover-art::before { top: -60px; left: 0; }
+        .cover-art::after { left: 60px; top: 0; }
+        @keyframes girarCorazon { from { transform: rotate(-45deg); } to { transform: rotate(315deg); } }
+
+        /* Letras */
+        #lyrics {
+            font-family: 'Dancing Script', cursive; font-size: 2.5rem; font-weight: 700; text-align: center;
+            color: rgba(255, 255, 255, 0.7); transition: all 0.4s ease; max-width: 90%; min-height: 100px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+        }
+        .highlight {
+            color: #ffffff !important; font-size: 3rem !important;
+            text-shadow: 0 0 30px #ff4d6d, 0 0 15px #ff9e00; transform: scale(1.1);
+        }
+
+        /* Barra de progreso */
+        .progress-bar {
+            width: 70%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 30px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #ff4d6d, #ff9e00); width: 0%; transition: width 0.1s linear;
+        }
+
+        /* =========================================
+           NUEVOS ESTILOS PARA LA FOTO FINAL
+        ========================================= */
+        #final-photo-container {
+            display: none; /* Oculto al principio */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20; /* Por encima de todo */
+        }
+        
+        #final-img-wrapper {
+             /* Contenedor para efectos de borde */
+            padding: 10px;
+            background: linear-gradient(45deg, #ff4d6d, #ff9e00);
+            border-radius: 25px;
+            box-shadow: 0 0 40px rgba(255, 77, 109, 0.5);
+            
+            /* Estado inicial para animación */
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto rebote suave */
+        }
+
+        #final-img {
+            display: block;
+            max-width: 85vw; /* Que no sea más ancha que la pantalla */
+            max-height: 60vh; /* Que no sea más alta que el 60% de la pantalla */
+            border-radius: 20px;
+            border: 4px solid #fff;
+        }
+
+        /* Clase para activar la animación de la foto */
+        .show-photo {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="estrellas"></canvas>
+<audio id="cancion" src="inmortal.mp3" preload="auto"></audio>
+
+<div class="container">
+    <div id="paso1" class="step active"><p class="intro-text">Para el amor de mi vida ✨❤️</p></div>
+    <div id="paso2" class="step"><p class="intro-text">Yesica, eres mi universo... ✨</p></div>
+    <div id="paso3" class="step">
+        <p class="intro-text">¿Quisieras ser mi San Valentín? 🥺❤️</p>
+        <div class="btn-container">
+            <button id="si" onclick="iniciar()">¡SÍ, ACEPTO! ❤️</button>
+            <button id="no" onmouseover="escapar(this)" onclick="escapar(this)">No</button>
+        </div>
+    </div>
+
+    <div id="player-container">
+        <div class="cover-art" id="disco"></div>
+        <div id="lyrics"></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+    </div>
+
+    <div id="final-photo-container" class="step">
+        <p class="intro-text">Te amo, hoy y siempre ❤️</p>
+        <div id="final-img-wrapper">
+            <img id="final-img" src="nosotros.jpg" alt="Foto de nosotros">
+        </div>
+         <p class="intro-text" style="font-size: 1.5rem; margin-top: 20px;">Feliz San Valentín, mi vida ✨</p>
+    </div>
+</div>
+
+<script>
+// Configuracion de tiempo
+const RETRASO_INICIAL = 2.5; 
+
+// Frases cortas y relleno
+const lyricsData = [
+    { t: 0, text: "✨ ❤️ ✨" },
+    { t: 8.0, text: "Escucha mi corazón..." },
+    { t: 17.5, text: "Te amo Yesica ❤️" },
+    { t: 21.8, text: "Eres increíble ✨" },
+    { t: 25.5, text: "Lo eres todo para mí" },
+    { t: 31.5, text: "Me encantas 🥰" },
+    { t: 35.5, text: "Estoy loco por ti" },
+    { t: 39.5, text: "Eres única, mi vida" },
+    { t: 43.5, text: "Te adoro ❤️" },
+    { t: 47.5, text: "Siempre tú y yo" },
+    { t: 51.5, text: "Gracias por existir" },
+    { t: 59.0, text: "Que todos lo sepan" },
+    { t: 62.5, text: "Nuestro amor es mágico ✨" },
+    { t: 66.5, text: "Es sagrado..." },
+    { t: 70.0, text: "Y eterno ❤️" },
+    { t: 73.8, text: "Cada día te amo más" },
+    { t: 78.5, text: "Nada nos detendrá" },
+    { t: 85.0, text: "Esto es INMORTAL ❤️" },
+    { t: 90.0, text: "🎵 Te amoooooo... 🎵" },
+    { t: 97.0, text: "🎵 Eres lo mejor que me pasó... 🎵" },
+    { t: 104.0, text: "🎵 Mi persona favorita... 🎵" },
+    { t: 110.5, text: "Siempre juntos ✨" },
+    { t: 115.0, text: "Nadie como tú" },
+    { t: 118.5, text: "Nací para ti ❤️" },
+    { t: 125.5, text: "Incluso en otra vida..." },
+    { t: 136.0, text: "Te volvería a elegir ❤️" },
+    { t: 140.5, text: "Este amor no muere ✨" },
+    { t: 147.5, text: "Es nuestro pacto" },
+    { t: 155.5, text: "Te amo muchísimo" },
+    { t: 163.0, text: "Eres mi reina 👑" },
+    { t: 171.5, text: "Testigos de este amor" },
+    { t: 179.0, text: "Es sagrado ✨" },
+    { t: 186.0, text: "¡TE AMO!" },
+    { t: 195.0, text: "❤️ Yesica y yo ❤️" },
+    { t: 205.0, text: "✨ Mi San Valentín ✨" },
+    { t: 215.5, text: "Los años pasan..." },
+    { t: 222.0, text: "Pero te amo más" },
+    { t: 229.0, text: "Amor INMORTAL ❤️" },
+    { t: 235.0, text: "Siempre juntos, mi vida ✨" }
+];
+
+const audio = document.getElementById('cancion');
+const lyricsDiv = document.getElementById('lyrics');
+const progressBar = document.getElementById('progress');
+const disco = document.getElementById('disco');
+const playerContainer = document.getElementById('player-container');
+
+// =========================================
+// NUEVO CÓDIGO PARA DETECTAR EL FINAL
+// =========================================
+audio.addEventListener('ended', () => {
+    // 1. Desvanecer el reproductor
+    playerContainer.style.opacity = 0;
+    disco.style.animationPlayState = 'paused'; // Parar el corazón
+
+    // 2. Esperar 1 segundo a que se desvanezca y mostrar la foto
+    setTimeout(() => {
+        playerContainer.style.display = 'none'; // Ocultar reproductor por completo
+        
+        const finalContainer = document.getElementById('final-photo-container');
+        const finalImgWrapper = document.getElementById('final-img-wrapper');
+        
+        finalContainer.style.display = 'flex'; // Preparar contenedor de foto
+
+        // Pequeña pausa para asegurar que el navegador procesa el 'display: flex' antes de animar
+        setTimeout(() => {
+             finalContainer.classList.add('active'); // Activar contenedor principal
+             finalImgWrapper.classList.add('show-photo'); // Activar animación de la foto con rebote
+        }, 100);
+
+    }, 1000);
+});
+
+
+function cambiarPaso(actual, siguiente, tiempo) {
+    setTimeout(() => {
+        const pasoActual = document.getElementById('paso' + actual);
+        const pasoSiguiente = document.getElementById('paso' + siguiente);
+        if(pasoActual) {
+            pasoActual.classList.remove('active');
+            pasoActual.style.opacity = 0;
+            setTimeout(() => {
+                pasoActual.style.display = 'none';
+                if (pasoSiguiente) {
+                    pasoSiguiente.style.display = 'block';
+                    setTimeout(() => {
+                        pasoSiguiente.style.opacity = 1;
+                        pasoSiguiente.classList.add('active');
+                    }, 50);
+                }
+            }, 1000);
+        }
+    }, tiempo);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    cambiarPaso(1, 2, 3000);
+    cambiarPaso(2, 3, 7000);
+});
+
+function escapar(b) {
+    const x = Math.random() * (window.innerWidth - b.offsetWidth - 20);
+    const y = Math.random() * (window.innerHeight - b.offsetHeight - 20);
+    b.style.position = 'absolute';
+    b.style.left = x + 'px';
+    b.style.top = y + 'px';
+}
+
+function iniciar() {
+    audio.play();
+    disco.style.animationPlayState = 'running';
+    
+    document.getElementById('paso3').classList.remove('active');
+    setTimeout(() => {
+        document.getElementById('paso3').style.display = 'none';
+        playerContainer.style.display = 'flex';
+        // Pequeño retraso para que la transición de opacidad funcione
+        setTimeout(() => {
+             playerContainer.style.opacity = 1;
+        }, 50);
+        
+    }, 1000);
+
+    lyricsDiv.innerText = ""; 
+    lyricsDiv.style.opacity = 1;
+
+    requestAnimationFrame(updateLyrics);
+}
+
+function updateLyrics() {
+    const currentTime = audio.currentTime; 
+    const duration = audio.duration;
+    
+    if(duration) {
+        progressBar.style.width = (currentTime / duration) * 100 + "%";
+    }
+
+    let currentLine = lyricsData.findLast(l => (currentTime - RETRASO_INICIAL) >= l.t);
+    
+    if (currentLine) {
+        if (lyricsDiv.innerText !== currentLine.text) {
+            lyricsDiv.classList.remove('highlight');
+            lyricsDiv.style.opacity = 0.2;
+            
+            setTimeout(() => {
+                lyricsDiv.innerText = currentLine.text;
+                lyricsDiv.style.opacity = 1;
+                lyricsDiv.classList.add('highlight');
+            }, 200);
+        }
+    }
+
+    if (!audio.paused) {
+        requestAnimationFrame(updateLyrics);
+    }
+}
+
+// Fondo de estrellas
+const canvas = document.getElementById('estrellas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let stars = Array(100).fill().map(() => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 2, s: Math.random() * 0.5 + 0.1 }));
+
+function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        s.y -= s.s; if (s.y < 0) s.y = canvas.height;
+    });
+    requestAnimationFrame(animateStars);
+}
+animateStars();
+</script>
+</body>
+</html>
